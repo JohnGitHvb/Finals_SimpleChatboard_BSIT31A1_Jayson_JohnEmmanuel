@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using SimpleChatboard.Web.Data;
+using SimpleChatboard.Data;
+using SimpleChatboard.Data.Entities;
 
 namespace SimpleChatboard.Web.Pages;
 
@@ -13,13 +14,10 @@ public class IndexModel : PageModel
         _db = db;
     }
 
-    public List<Room> Rooms { get; set; } = new();
+    public IList<Room> Rooms { get; set; } = new List<Room>();
 
     public async Task OnGetAsync()
     {
-        if (User.Identity?.IsAuthenticated ?? false)
-        {
-            Rooms = await _db.Rooms.AsNoTracking().ToListAsync();
-        }
+        Rooms = await _db.Rooms.OrderByDescending(r => r.Id).Take(10).ToListAsync();
     }
 }

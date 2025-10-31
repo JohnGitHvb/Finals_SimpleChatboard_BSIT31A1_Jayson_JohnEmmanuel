@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using SimpleChatboard.Web.Data;
-using SimpleChatboard.Web.Models;
+using SimpleChatboard.Data;
+using SimpleChatboard.Data.Entities;
 
 namespace SimpleChatboard.Web.Pages.Rooms;
 
@@ -13,108 +13,142 @@ public class ChatModel : PageModel
 {
     private readonly ApplicationDbContext _db;
     private readonly UserManager<ApplicationUser> _userManager;
-    
+
     public ChatModel(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
     {
         _db = db;
         _userManager = userManager;
     }
 
-    [BindProperty(SupportsGet = true)]
-    public int Id { get; set; }
     public Room? Room { get; set; }
-    public List<Message> Messages { get; set; } = new();
-    public List<RoomUser> Members { get; set; } = new();
+    public IList<Room> Rooms { get; set; } = new List<Room>();
+    public IList<Message> Messages { get; set; } = new List<Message>();
+    public IList<RoomUser> Users { get; set; } = new List<RoomUser>();
+    public string? ErrorMessage { get; set; }
+    
     [BindProperty]
     public string NewMessage { get; set; } = string.Empty;
-    public List<Room> Rooms { get; set; } = new();
-    public List<(string DisplayName, string Content, DateTime Timestamp)> DisplayMessages { get; set; } = new();
-    public List<(string DisplayName, string UserId)> DisplayMembers { get; set; } = new();
-    public bool IsCreator { get; set; }
-    public string CreatorName { get; set; } = string.Empty;
+    
+    public bool IsCreator => Room?.CreatedByUserId == _userManager.GetUserId(User);
+    public string CreatorName => Room?.CreatedBy?.DisplayName ?? Room?.CreatedBy?.UserName ?? "Unknown";
+    public IList<RoomUser> Members => Users;
+    public IList<(string DisplayName, DateTime Timestamp, string Content)> DisplayMessages =>
+        Messages.Select(m => (
+            DisplayName: m.User?.DisplayName ?? m.User?.UserName ?? "Unknown",
+            m.Timestamp,
+            m.Content
+        )).ToList();
+    public IList<(string DisplayName, string UserId)> DisplayMembers =>
+        Users.Select(u => (
+            DisplayName: u.User?.DisplayName ?? u.User?.UserName ?? "Unknown",
+            UserId: u.UserId
+        )).ToList();
 
-    public async Task<IActionResult> OnGetAsync()
+    public async Task<IActionResult> OnGetAsync(int id)
     {
-        Room = await _db.Rooms
-            .Include(r => r.Users)
-            .Include(r => r.CreatedBy)
-            .FirstOrDefaultAsync(r => r.Id == Id);
-            
-        if (Room == null) return NotFound();
-        
         var userId = _userManager.GetUserId(User);
-        IsCreator = Room.CreatedByUserId == userId;
-        CreatorName = Room.CreatedBy?.DisplayName ?? Room.CreatedByUserId;
-        
-        Rooms = await _db.Rooms.AsNoTracking().ToListAsync();
-        Members = await _db.RoomUsers
-            .Include(ru => ru.User)
-            .Where(ru => ru.RoomId == Id)
-            .ToListAsync();
-            
-        Messages = await _db.Messages
-            .Include(m => m.User)
-            .Where(m => m.RoomId == Id)
-            .OrderBy(m => m.Timestamp)
-            .ToListAsync();
-
-        DisplayMessages = Messages
-            .Select(m => (m.User?.DisplayName ?? m.UserId, m.Content, m.Timestamp))
-            .ToList();
-            
-        DisplayMembers = Members
-            .Select(m => (m.User?.DisplayName ?? m.UserId, m.UserId))
-            .ToList();
-
-        if (!Members.Any(m => m.UserId == userId))
+        if (userId == null)
         {
-            if (Members.Count >= 50) return Forbid();
-            
-            _db.RoomUsers.Add(new RoomUser { RoomId = Id, UserId = userId! });
-            await _db.SaveChangesAsync();
-            Members.Add(new RoomUser { RoomId = Id, UserId = userId! });
+            return Forbid();
         }
-        
+
+        // Get user's rooms for the left panel
+        Rooms = await _db.Rooms
+            .Include(r => r.Users)
+            .Where(r => r.Users.Any(u => u.UserId == userId))
+            .ToListAsync();
+
+        Room = await _db.Rooms
+            .Include(r => r.Messages)
+            .ThenInclude(m => m.User)
+            .Include(r => r.Users)
+            .ThenInclude(ru => ru.User)
+            .Include(r => r.CreatedBy)
+            .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (Room == null)
+        {
+            ErrorMessage = "Room not found.";
+            return RedirectToPage("Index");
+        }
+
+        if (!Room.Users.Any(u => u.UserId == userId))
+        {
+            ErrorMessage = "You are not a member of this room.";
+            return RedirectToPage("Index");
+        }
+
+        Messages = Room.Messages.OrderByDescending(m => m.Timestamp).ToList();
+        Users = Room.Users.ToList();
+
         return Page();
     }
 
-    public async Task<IActionResult> OnPostAsync()
+    public async Task<IActionResult> OnPostAsync(int id)
     {
         if (string.IsNullOrWhiteSpace(NewMessage))
         {
-            return RedirectToPage(new { id = Id });
+            return RedirectToPage(new { id });
         }
 
         var userId = _userManager.GetUserId(User);
-        var msg = new Message 
-        { 
-            RoomId = Id, 
-            UserId = userId!, 
-            Content = NewMessage, 
-            Timestamp = DateTime.UtcNow 
-        };
-        
-        _db.Messages.Add(msg);
-        await _db.SaveChangesAsync();
-
-        return RedirectToPage(new { id = Id });
-    }
-
-    public async Task<IActionResult> OnPostDeleteRoomAsync(int id)
-    {
-        var room = await _db.Rooms.FindAsync(id);
-        if (room == null) return NotFound();
-
-        var userId = _userManager.GetUserId(User);
-        if (room.CreatedByUserId != userId)
+        var user = await _userManager.GetUserAsync(User);
+        if (userId == null || user == null)
         {
             return Forbid();
+        }
+
+        var room = await _db.Rooms
+            .Include(r => r.Users)
+            .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (room == null)
+        {
+            ErrorMessage = "Room not found.";
+            return RedirectToPage("Index");
+        }
+
+        if (!room.Users.Any(u => u.UserId == userId))
+        {
+            ErrorMessage = "You are not a member of this room.";
+            return RedirectToPage("Index");
+        }
+
+        var message = new Message
+        {
+            Content = NewMessage,
+            RoomId = id,
+            UserId = userId,
+            User = user,
+            Room = room,
+            Timestamp = DateTime.UtcNow
+        };
+
+        _db.Messages.Add(message);
+        await _db.SaveChangesAsync();
+
+        return RedirectToPage(new { id });
+    }
+    
+    public async Task<IActionResult> OnPostDeleteRoomAsync(int id)
+    {
+        var userId = _userManager.GetUserId(User);
+        if (userId == null)
+        {
+            return Forbid();
+        }
+
+        var room = await _db.Rooms
+            .FirstOrDefaultAsync(r => r.Id == id && r.CreatedByUserId == userId);
+
+        if (room == null)
+        {
+            return NotFound();
         }
 
         _db.Rooms.Remove(room);
         await _db.SaveChangesAsync();
 
-        TempData["RoomDeleted"] = true;
-        return RedirectToPage("/Index");
+        return RedirectToPage("Index");
     }
 }

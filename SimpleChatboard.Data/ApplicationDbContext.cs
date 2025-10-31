@@ -1,38 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SimpleChatboard.Web.Models;
+using SimpleChatboard.Data.Entities;
 
-namespace SimpleChatboard.Web.Data;
-
-public class Room
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string? CreatedByUserId { get; set; }
-    public ApplicationUser? CreatedBy { get; set; }
-    public ICollection<RoomUser> Users { get; set; } = new List<RoomUser>();
-    public ICollection<Message> Messages { get; set; } = new List<Message>();
-}
-
-public class RoomUser
-{
-    public int Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
-    public Room Room { get; set; } = null!;
-    public int RoomId { get; set; }
-    public ApplicationUser? User { get; set; }
-}
-
-public class Message
-{
-    public int Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
-    public Room Room { get; set; } = null!;
-    public int RoomId { get; set; }
-    public string Content { get; set; } = string.Empty;
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-    public ApplicationUser? User { get; set; }
-}
+namespace SimpleChatboard.Data;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {

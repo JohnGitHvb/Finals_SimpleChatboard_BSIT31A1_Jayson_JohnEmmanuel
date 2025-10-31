@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Identity;
-using SimpleChatboard.Web.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using SimpleChatboard.Data.Entities;
 
 namespace SimpleChatboard.Web.Pages;
 
@@ -10,9 +10,6 @@ namespace SimpleChatboard.Web.Pages;
 [IgnoreAntiforgeryToken]
 public class ErrorModel : PageModel
 {
-    public string? RequestId { get; set; }
-    public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
-
     private readonly ILogger<ErrorModel> _logger;
     private readonly UserManager<ApplicationUser> _userManager;
 
@@ -22,8 +19,21 @@ public class ErrorModel : PageModel
         _userManager = userManager;
     }
 
-    public void OnGet()
+    public string? RequestId { get; set; }
+
+    public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+
+    public async Task OnGetAsync()
     {
         RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        var user = await _userManager.GetUserAsync(User);
+        if (user != null)
+        {
+            _logger.LogError("Error for user {UserId} with RequestId {RequestId}", user.Id, RequestId);
+        }
+        else
+        {
+            _logger.LogError("Error for anonymous user with RequestId {RequestId}", RequestId);
+        }
     }
 }

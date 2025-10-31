@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SimpleChatboard.Web.Models;
+using SimpleChatboard.Data.Entities;
 
 namespace SimpleChatboard.Web.Areas.Identity.Pages.Account;
 
