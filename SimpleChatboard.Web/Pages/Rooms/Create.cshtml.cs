@@ -1,62 +1,56 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using SimpleChatboard.Data;
 using SimpleChatboard.Data.Entities;
-using SimpleChatboard.Services;
 
 namespace SimpleChatboard.Web.Pages.Rooms;
 
 [Authorize]
 public class CreateModel : PageModel
 {
-    private readonly IRoomService _roomService;
+    private readonly ApplicationDbContext _db;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public CreateModel(IRoomService roomService, UserManager<ApplicationUser> userManager)
+    public CreateModel(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
     {
-        _roomService = roomService;
+        _db = db;
         _userManager = userManager;
     }
 
     [BindProperty]
-    public Room Room { get; set; } = new();
-    public string? ErrorMessage { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     public void OnGet() { }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid || string.IsNullOrWhiteSpace(Room.Name))
+        if (!ModelState.IsValid)
         {
-            ErrorMessage = "Room name is required.";
-            return Page();
-        }
-
-        if (await _roomService.RoomExistsAsync(Room.Name))
-        {
-            ErrorMessage = "A room with this name already exists.";
             return Page();
         }
 
         var userId = _userManager.GetUserId(User);
-        var user = await _userManager.FindByIdAsync(userId!);
-        if (user == null)
+        var user = await _userManager.GetUserAsync(User);
+
+        if (userId == null || user == null)
         {
-            ErrorMessage = "User not found.";
-            return Page();
+            return Forbid();
         }
 
-        try
+        var room = new Room
         {
-            await _roomService.CreateRoomAsync(Room.Name, userId, user);
-            TempData["RoomCreated"] = true;
-            return RedirectToPage("Index");
-        }
-        catch
-        {
-            ErrorMessage = "An error occurred while creating the room. Please try again.";
-            return Page();
-        }
+            Name = Name,
+            CreatedByUserId = userId,
+            CreatedBy = user
+        };
+
+        _db.Rooms.Add(room);
+        await _db.SaveChangesAsync();
+
+        // No need to explicitly add creator as member since Chat page will handle auto-joining
+
+        return RedirectToPage("/Rooms/Chat", new { id = room.Id });
     }
 }

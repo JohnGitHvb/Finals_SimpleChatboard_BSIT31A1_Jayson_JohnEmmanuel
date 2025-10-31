@@ -18,6 +18,10 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        Rooms = await _db.Rooms.OrderByDescending(r => r.Id).Take(10).ToListAsync();
+        Rooms = await _db.Rooms
+            .Include(r => r.Users)
+            .OrderByDescending(r => r.Id)
+            .Take(10)
+            .ToListAsync();
     }
 }
