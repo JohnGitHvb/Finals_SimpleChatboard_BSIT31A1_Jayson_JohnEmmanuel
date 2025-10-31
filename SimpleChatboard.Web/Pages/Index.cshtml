@@ -28,22 +28,26 @@ else
     <div class="row g-0">
         <div class="col-3 border-end vh-100 overflow-auto py-3 px-2">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="mb-0">Rooms</h5>
-                <div class="btn-group">
-                    <a class="btn btn-sm btn-primary" asp-page="/Rooms/Create">
-                        <i class="bi bi-plus-lg"></i> New
-                    </a>
-                    <a class="btn btn-sm btn-outline-secondary" asp-page="/Rooms/Join">
-                        <i class="bi bi-box-arrow-in-right"></i> Join
-                    </a>
-                </div>
+                <h5 class="mb-0">Chat Rooms</h5>
+                <a class="btn btn-sm btn-primary" asp-page="/Rooms/Create">
+                    <i class="bi bi-plus-lg"></i> New Room
+                </a>
             </div>
-            <partial name="_RoomListPartial" model="@Model.Rooms" />
+            <div class="room-list">
+                @foreach (var room in Model.Rooms)
+                {
+                    <div class="room-item mb-2">
+                        <a class="btn btn-outline-primary w-100 text-start" asp-page="/Rooms/Chat" asp-route-id="@room.Id">
+                            <i class="bi bi-chat-left-text"></i> @room.Name
+                        </a>
+                    </div>
+                }
+            </div>
         </div>
         <div class="col-9 vh-100 d-flex align-items-center justify-content-center">
             <div class="text-center text-muted">
                 <h5>Select a room to start chatting</h5>
-                <p>Or create a new room to begin the conversation</p>
+                <p>All rooms are public - just click and start chatting!</p>
             </div>
         </div>
     </div>

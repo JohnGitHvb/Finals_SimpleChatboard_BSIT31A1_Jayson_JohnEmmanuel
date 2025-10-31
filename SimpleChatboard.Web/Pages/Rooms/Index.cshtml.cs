@@ -2,21 +2,20 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using SimpleChatboard.Data;
 using SimpleChatboard.Data.Entities;
+using SimpleChatboard.Services;
 
 namespace SimpleChatboard.Web.Pages.Rooms;
 
 [Authorize]
 public class IndexModel : PageModel
 {
-    private readonly ApplicationDbContext _db;
+    private readonly IRoomService _roomService;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public IndexModel(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+    public IndexModel(IRoomService roomService, UserManager<ApplicationUser> userManager)
     {
-        _db = db;
+        _roomService = roomService;
         _userManager = userManager;
     }
 
@@ -31,15 +30,17 @@ public class IndexModel : PageModel
             return Forbid();
         }
 
-        Rooms = await _db.Rooms
-            .Where(r => r.Users.Any(u => u.UserId == userId))
-            .OrderByDescending(r => r.Id)
-            .ToListAsync();
+        Rooms = await _roomService.GetUserRoomsAsync(userId);
 
         if (TempData["RoomCreated"] is true)
         {
             StatusMessage = "Room created successfully!";
             TempData.Remove("RoomCreated");
+        }
+        else if (TempData["RoomDeleted"] is true)
+        {
+            StatusMessage = "Room deleted successfully!";
+            TempData.Remove("RoomDeleted");
         }
 
         return Page();

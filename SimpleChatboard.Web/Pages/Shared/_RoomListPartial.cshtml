@@ -4,8 +4,22 @@
 <div class="room-list">
     @foreach (var room in Model)
     {
-        <div class="room-item">
-            <a asp-page="/Rooms/Chat" asp-route-id="@room.Id">@room.Name</a>
+        <div class="room-item mb-2">
+            <a class="btn btn-outline-primary w-100 text-start" asp-page="/Rooms/Chat" asp-route-id="@room.Id">
+                <i class="bi bi-chat-left-text"></i> @room.Name
+            </a>
         </div>
     }
 </div>
+
+<style>
+    .room-item a {
+        text-decoration: none;
+        padding: 8px 12px;
+        transition: all 0.2s ease;
+    }
+    
+    .room-item a:hover {
+        transform: translateY(-1px);
+    }
+</style>

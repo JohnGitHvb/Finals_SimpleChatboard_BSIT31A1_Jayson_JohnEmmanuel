@@ -52,10 +52,9 @@ public class ChatModel : PageModel
             return Forbid();
         }
 
-        // Get user's rooms for the left panel
+        // Get all rooms for the left panel
         Rooms = await _db.Rooms
-            .Include(r => r.Users)
-            .Where(r => r.Users.Any(u => u.UserId == userId))
+            .OrderByDescending(r => r.Id)
             .ToListAsync();
 
         Room = await _db.Rooms
@@ -69,13 +68,23 @@ public class ChatModel : PageModel
         if (Room == null)
         {
             ErrorMessage = "Room not found.";
-            return RedirectToPage("Index");
+            return RedirectToPage("/Index");
         }
 
+        // Always ensure user is a member of the room
         if (!Room.Users.Any(u => u.UserId == userId))
         {
-            ErrorMessage = "You are not a member of this room.";
-            return RedirectToPage("Index");
+            var user = await _userManager.GetUserAsync(User);
+            var roomUser = new RoomUser
+            {
+                RoomId = Room.Id,
+                UserId = userId,
+                Room = Room,
+                User = user
+            };
+            
+            Room.Users.Add(roomUser);
+            await _db.SaveChangesAsync();
         }
 
         Messages = Room.Messages.OrderByDescending(m => m.Timestamp).ToList();
@@ -99,19 +108,12 @@ public class ChatModel : PageModel
         }
 
         var room = await _db.Rooms
-            .Include(r => r.Users)
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (room == null)
         {
             ErrorMessage = "Room not found.";
-            return RedirectToPage("Index");
-        }
-
-        if (!room.Users.Any(u => u.UserId == userId))
-        {
-            ErrorMessage = "You are not a member of this room.";
-            return RedirectToPage("Index");
+            return RedirectToPage("/Index");
         }
 
         var message = new Message
@@ -149,6 +151,6 @@ public class ChatModel : PageModel
         _db.Rooms.Remove(room);
         await _db.SaveChangesAsync();
 
-        return RedirectToPage("Index");
+        return RedirectToPage("/Index");
     }
 }
