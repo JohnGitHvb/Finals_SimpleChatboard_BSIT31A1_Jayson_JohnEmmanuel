@@ -1,0 +1,75 @@
+@page
+@model SimpleChatboard.Web.Areas.Identity.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">Create Account</h2>
+                <a asp-page="/Index" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-house-door"></i> Home
+                </a>
+            </div>
+
+            <form id="registerForm" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                
+                <div class="mb-3">
+                    <label asp-for="Input.DisplayName" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input asp-for="Input.DisplayName" class="form-control" aria-required="true"
+                               placeholder="How others will see you" />
+                    </div>
+                    <span asp-validation-for="Input.DisplayName" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Input.Email" class="form-control" aria-required="true"
+                               placeholder="name@example.com" />
+                    </div>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <input asp-for="Input.Password" class="form-control" aria-required="true"
+                               placeholder="Password" />
+                    </div>
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+                
+                <div class="mb-4">
+                    <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                        <input asp-for="Input.ConfirmPassword" class="form-control" aria-required="true"
+                               placeholder="Confirm password" />
+                    </div>
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button id="registerSubmit" type="submit" class="btn btn-primary">Register</button>
+                    <a class="btn btn-outline-secondary" asp-page="./Login">
+                        Already have an account? Sign in
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+}

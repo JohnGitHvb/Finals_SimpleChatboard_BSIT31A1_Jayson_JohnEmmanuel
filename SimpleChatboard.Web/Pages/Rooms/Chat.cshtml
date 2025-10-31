@@ -1,0 +1,95 @@
+@page "{id:int}"
+@model SimpleChatboard.Web.Pages.Rooms.ChatModel
+@{
+    ViewData["Title"] = Model.Room?.Name ?? "Chat";
+}
+
+<div class="row g-0 vh-100">
+    <!-- Left panel: Room list -->
+    <div class="col-3 border-end vh-100 overflow-auto py-3 px-2">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0">Rooms</h5>
+            <a asp-page="/Index" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-house-door"></i>
+            </a>
+        </div>
+        <partial name="_RoomListPartial" model="Model.Rooms" />
+    </div>
+
+    <!-- Middle: Chat messages -->
+    <div class="col-6 d-flex flex-column vh-100 p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">@Model.Room?.Name</h5>
+            @if (Model.IsCreator)
+            {
+                <form method="post" asp-page-handler="DeleteRoom" asp-route-id="@Model.Room?.Id" 
+                      onsubmit="return confirm('Are you sure you want to delete this room? This cannot be undone.');">
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash"></i> Delete Room
+                    </button>
+                </form>
+            }
+        </div>
+        <div class="flex-grow-1 overflow-auto border rounded p-3 mb-3" style="background: var(--dark-secondary)">
+            @if (Model.DisplayMessages.Any())
+            {
+                foreach (var msg in Model.DisplayMessages)
+                {
+                    <div class="mb-2">
+                        <div class="d-flex align-items-baseline">
+                            <span class="fw-bold">@msg.DisplayName</span>
+                            <small class="text-muted ms-2">@msg.Timestamp.ToLocalTime().ToString("HH:mm")</small>
+                        </div>
+                        <div>@msg.Content</div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-muted text-center">No messages yet. Start the conversation!</div>
+            }
+        </div>
+        <form method="post" class="mt-auto">
+            <div class="input-group">
+                <input asp-for="NewMessage" class="form-control" placeholder="Type your message..." autocomplete="off" />
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-send"></i>
+                </button>
+            </div>
+            <span asp-validation-for="NewMessage" class="text-danger"></span>
+        </form>
+    </div>
+
+    <!-- Right panel: Room details -->
+    <div class="col-3 border-start vh-100 overflow-auto p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Room Details</h6>
+            <a asp-page="Members" asp-route-id="@Model.Room?.Id" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-people"></i> View All
+            </a>
+        </div>
+        
+        <div class="mb-3">
+            <label class="text-muted d-block">Created By</label>
+            <div>@Model.CreatorName</div>
+        </div>
+
+        <label class="text-muted d-block">Members (@Model.Members.Count/50)</label>
+        <ul class="list-unstyled">
+            @foreach (var m in Model.DisplayMembers.Take(5))
+            {
+                <li class="mb-1">
+                    <i class="bi bi-person-circle"></i> @m.DisplayName
+                </li>
+            }
+            @if (Model.DisplayMembers.Count > 5)
+            {
+                <li class="text-muted">...and @(Model.DisplayMembers.Count - 5) more</li>
+            }
+        </ul>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+}

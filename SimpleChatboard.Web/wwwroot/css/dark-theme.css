@@ -1,0 +1,173 @@
+/* Dark theme variables */
+:root {
+    --dark-bg: #1a1a1a;
+    --dark-secondary: #2d2d2d;
+    --dark-border: #404040;
+    --dark-text: #e0e0e0;
+    --dark-text-secondary: #a0a0a0;
+    --dark-primary: #4f46e5;
+    --dark-primary-hover: #4338ca;
+    --dark-success: #059669;
+    --dark-danger: #dc2626;
+    --dark-input-group: #363636;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+}
+
+.navbar {
+    background-color: var(--dark-secondary) !important;
+    border-bottom: 1px solid var(--dark-border);
+}
+
+.navbar-light .navbar-brand,
+.navbar-light .navbar-nav .nav-link {
+    color: var(--dark-text) !important;
+}
+
+.list-group-item {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+}
+
+.list-group-item a {
+    color: var(--dark-text);
+    text-decoration: none;
+}
+
+.list-group-item:hover {
+    background-color: #363636;
+}
+
+.btn-primary {
+    background-color: var(--dark-primary);
+    border-color: var(--dark-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--dark-primary-hover);
+    border-color: var(--dark-primary-hover);
+}
+
+.btn-outline-secondary {
+    color: var(--dark-text);
+    border-color: var(--dark-border);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+}
+
+.border-end {
+    border-color: var(--dark-border) !important;
+}
+
+.badge {
+    background-color: var(--dark-border) !important;
+}
+
+.alert-success {
+    background-color: var(--dark-success);
+    border-color: transparent;
+    color: var(--dark-text);
+}
+
+.footer {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-border);
+    color: var(--dark-text-secondary);
+}
+
+/* Form Controls */
+.form-control,
+.form-control[readonly],
+.form-control:disabled {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+}
+
+.form-control:focus {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-primary);
+    color: var(--dark-text);
+    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25);
+}
+
+.form-control::placeholder {
+    color: var(--dark-text-secondary);
+}
+
+/* Input Groups */
+.input-group-text {
+    background-color: var(--dark-input-group);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+}
+
+/* Dropdowns */
+.dropdown-menu {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-border);
+}
+
+.dropdown-item {
+    color: var(--dark-text);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--dark-input-group);
+    color: var(--dark-text);
+}
+
+.dropdown-divider {
+    border-color: var(--dark-border);
+}
+
+/* Text Colors */
+.text-muted {
+    color: var(--dark-text-secondary) !important;
+}
+
+.text-danger {
+    color: var(--dark-danger) !important;
+}
+
+/* Form Check */
+.form-check-input {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-border);
+}
+
+.form-check-input:checked {
+    background-color: var(--dark-primary);
+    border-color: var(--dark-primary);
+}
+
+.form-check-label {
+    color: var(--dark-text);
+}
+
+/* Identity Pages */
+.validation-summary-errors {
+    color: var(--dark-danger);
+}
+
+/* Alerts */
+.alert {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+}
+
+.alert-danger {
+    background-color: rgba(220, 38, 38, 0.2);
+    border-color: var(--dark-danger);
+    color: var(--dark-text);
+}
