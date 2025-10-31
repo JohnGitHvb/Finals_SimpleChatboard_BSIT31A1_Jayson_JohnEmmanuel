@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace SimpleChatboard.Web.Models;
+namespace SimpleChatboard.Data.Entities;
 
 public class ApplicationUser : IdentityUser
 {

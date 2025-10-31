@@ -1,20 +1,11 @@
-@model List<SimpleChatboard.Web.Data.Room>
+@using SimpleChatboard.Data.Entities
+@model IEnumerable<Room>
 
-@if (Model.Any())
-{
-    <div class="list-group">
-        @foreach (var room in Model)
-        {
-            <a asp-page="/Rooms/Chat" asp-route-id="@room.Id" 
-               class="list-group-item list-group-item-action">
-                @room.Name
-            </a>
-        }
-    </div>
-}
-else
-{
-    <div class="text-center text-muted">
-        <p>No rooms available</p>
-    </div>
-}
+<div class="room-list">
+    @foreach (var room in Model)
+    {
+        <div class="room-item">
+            <a asp-page="/Rooms/Chat" asp-route-id="@room.Id">@room.Name</a>
+        </div>
+    }
+</div>

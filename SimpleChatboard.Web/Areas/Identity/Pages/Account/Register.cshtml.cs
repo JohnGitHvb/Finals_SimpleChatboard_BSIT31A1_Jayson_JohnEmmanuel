@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using SimpleChatboard.Web.Models;
+using SimpleChatboard.Data.Entities;
 
 namespace SimpleChatboard.Web.Areas.Identity.Pages.Account;
 
@@ -27,6 +27,8 @@ public class RegisterModel : PageModel
     public InputModel Input { get; set; } = new();
 
     public string? ReturnUrl { get; set; }
+
+    public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
 
     public class InputModel
     {
@@ -53,63 +55,34 @@ public class RegisterModel : PageModel
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 
-    public void OnGet(string? returnUrl = null)
+    public async Task OnGetAsync(string? returnUrl = null)
     {
         ReturnUrl = returnUrl;
+        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
     }
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
         returnUrl ??= Url.Content("~/");
-
-        try
+        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        if (ModelState.IsValid)
         {
-            if (ModelState.IsValid)
+            var user = new ApplicationUser { UserName = Input.Email, Email = Input.Email, DisplayName = Input.DisplayName };
+            var result = await _userManager.CreateAsync(user, Input.Password);
+            if (result.Succeeded)
             {
-                var existingUser = await _userManager.FindByEmailAsync(Input.Email);
-                if (existingUser != null)
-                {
-                    ModelState.AddModelError(string.Empty, "Email already exists.");
-                    return Page();
-                }
+                _logger.LogInformation("User created a new account with password.");
 
-                var user = new ApplicationUser
-                {
-                    UserName = Input.Email,
-                    Email = Input.Email,
-                    DisplayName = Input.DisplayName
-                };
-
-                var result = await _userManager.CreateAsync(user, Input.Password);
-
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation("User created a new account with password.");
-
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return LocalRedirect(returnUrl);
-                }
-
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return LocalRedirect(returnUrl);
             }
-            else
+            foreach (var error in result.Errors)
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors);
-                foreach (var error in errors)
-                {
-                    _logger.LogError($"Model validation error: {error.ErrorMessage}");
-                }
+                ModelState.AddModelError(string.Empty, error.Description);
             }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Registration error: {ex}");
-            ModelState.AddModelError(string.Empty, "An error occurred during registration. Please try again.");
-        }
 
+        // If we got this far, something failed, redisplay form
         return Page();
     }
 }

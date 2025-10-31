@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using SimpleChatboard.Web.Data;
+using SimpleChatboard.Data;
+using SimpleChatboard.Data.Entities;
 
 namespace SimpleChatboard.Web.Pages.Rooms;
 
@@ -9,7 +12,13 @@ namespace SimpleChatboard.Web.Pages.Rooms;
 public class MembersModel : PageModel
 {
     private readonly ApplicationDbContext _db;
-    public MembersModel(ApplicationDbContext db) => _db = db;
+    private readonly UserManager<ApplicationUser> _userManager;
+
+    public MembersModel(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+    {
+        _db = db;
+        _userManager = userManager;
+    }
 
     public int RoomId { get; set; }
     public List<(string DisplayName, string UserId)> DisplayMembers { get; set; } = new();

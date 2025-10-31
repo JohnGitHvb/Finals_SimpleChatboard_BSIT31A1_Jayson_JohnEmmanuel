@@ -1,12 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using SimpleChatboard.Web.Data;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using SimpleChatboard.Web.Models;
-using Microsoft.AspNetCore.Identity;
+using SimpleChatboard.Data;
+using SimpleChatboard.Data.Entities;
 
 namespace SimpleChatboard.Web.Pages.Rooms;
 
@@ -22,18 +20,28 @@ public class IndexModel : PageModel
         _userManager = userManager;
     }
 
-    [BindProperty]
-    public List<Room> Rooms { get; set; } = new();
+    public IList<Room> Rooms { get; set; } = new List<Room>();
+    public string? StatusMessage { get; set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
-        if (!User.Identity?.IsAuthenticated ?? true)
+        var userId = _userManager.GetUserId(User);
+        if (userId == null)
         {
-            return Challenge();
+            return Forbid();
         }
 
-        ViewData["Title"] = "Rooms";
-        Rooms = await _db.Rooms.AsNoTracking().ToListAsync();
+        Rooms = await _db.Rooms
+            .Where(r => r.Users.Any(u => u.UserId == userId))
+            .OrderByDescending(r => r.Id)
+            .ToListAsync();
+
+        if (TempData["RoomCreated"] is true)
+        {
+            StatusMessage = "Room created successfully!";
+            TempData.Remove("RoomCreated");
+        }
+
         return Page();
     }
 }
